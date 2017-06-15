@@ -37,6 +37,13 @@
       },
       "runtime" : {
          "requires" : {
+            "Catmandu" : "1.0507",
+            "File::Share" : "0",
+            "XML::Compile::SOAP11" : "0",
+            "XML::Compile::Transport::SOAPHTTP" : "0",
+            "XML::Compile::WSDL11" : "3.06",
+            "XML::LibXML::Simple" : "0",
+            "namespace::clean" : "0",
             "perl" : "5.008005"
          }
       },

@@ -1,3 +1,16 @@
+package Catmandu::WoS::AuthWSDL;
+
+use Catmandu::Sane;
+
+our $VERSION = '0.01';
+
+sub xml {
+    state $xml = do { binmode DATA, 'encoding(utf-8)'; local $/; <DATA> };
+}
+
+1;
+
+__DATA__
 <?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:WOKMWSAuthenticate="http://auth.cxf.wokmws.thomsonreuters.com" name="WOKMWSAuthenticateService" targetNamespace="http://auth.cxf.wokmws.thomsonreuters.com">
   <wsdl:types>
 <xs:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:WOKMWSAuthenticate="http://auth.cxf.wokmws.thomsonreuters.com" attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://auth.cxf.wokmws.thomsonreuters.com">

@@ -1,14 +1,14 @@
 # NAME
 
-Catmandu::WoS - Blah blah blah
+Catmandu::Importer::WoS - Blah blah blah
 
 # SYNOPSIS
 
-    use Catmandu::WoS;
+    use Catmandu::Importer::WoS;
 
 # DESCRIPTION
 
-Catmandu::WoS is
+Catmandu::Importer::WoS is
 
 # AUTHOR
 
