@@ -5,7 +5,7 @@ use Catmandu::Sane;
 our $VERSION = '0.01';
 
 sub xml {
-    state $xml = do { binmode DATA, 'encoding(utf-8)'; local $/; <DATA> };
+    state $xml = do {binmode DATA, 'encoding(utf-8)'; local $/; <DATA>};
 }
 
 1;

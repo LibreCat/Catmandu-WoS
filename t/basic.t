@@ -11,7 +11,11 @@ SKIP: {
     skip "env WOK_USERNAME, WOK_PASSWORD not defined"
         unless $ENV{WOK_USERNAME} && $ENV{WOK_PASSWORD};
 
-    my $importer = $pkg->new(username => $ENV{WOK_USERNAME}, password => $ENV{WOK_PASSWORD}, query => 'TS=(cadmium OR lead)');
+    my $importer = $pkg->new(
+        username => $ENV{WOK_USERNAME},
+        password => $ENV{WOK_PASSWORD},
+        query    => 'TS=(cadmium OR lead)'
+    );
 
     ok is_string($importer->session_id);
 

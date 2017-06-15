@@ -18,30 +18,35 @@ with 'Catmandu::Importer';
 
 has username => (is => 'ro', required => 1);
 has password => (is => 'ro', required => 1);
-has query => (is => 'ro', required => 1);
+has query    => (is => 'ro', required => 1);
 has session_id => (is => 'lazy');
-has _init => (is => 'lazy');
-has _search => (is => 'rwp');
-has _retrieve => (is => 'rwp');
+has _init      => (is => 'lazy');
+has _search    => (is => 'rwp');
+has _retrieve  => (is => 'rwp');
 
 sub _build_session_id {
     my ($self) = @_;
 
     my $wsdl = XML::Compile::WSDL11->new(Catmandu::WoS::AuthWSDL->xml);
 
-    my $authenticate = $wsdl->compileClient('authenticate', transport_hook => sub {
-        my ($req, $trace) = @_;
-        my $auth = 'Basic '. encode_base64(join(':', $self->username, $self->password));
-        $req->header(Authorization => $auth);
-        my $ua = $trace->{user_agent};
-        $ua->request($req);
-    });
+    my $authenticate = $wsdl->compileClient(
+        'authenticate',
+        transport_hook => sub {
+            my ($req, $trace) = @_;
+            my $auth = 'Basic '
+                . encode_base64(join(':', $self->username, $self->password));
+            $req->header(Authorization => $auth);
+            my $ua = $trace->{user_agent};
+            $ua->request($req);
+        }
+    );
 
     undef $wsdl;
 
     my $res = $authenticate->();
 
     if ($res->{Fault}) {
+
         # TODO
     }
 
@@ -61,8 +66,10 @@ sub _build__init {
         $ua->request($req);
     };
 
-    $self->_set__search($wsdl->compileClient('search', transport_hook => $transport_hook));
-    $self->_set__retrieve($wsdl->compileClient('retrieve', transport_hook => $transport_hook));
+    $self->_set__search(
+        $wsdl->compileClient('search', transport_hook => $transport_hook));
+    $self->_set__retrieve(
+        $wsdl->compileClient('retrieve', transport_hook => $transport_hook));
 
     undef $wsdl;
 
@@ -87,38 +94,41 @@ sub generator {
             my $res;
 
             if (defined $query_id) {
-                $res = $self->_retrieve->(queryId => $query_id, retrieveParameters => {
-                    firstRecord => $start,
-                    count => $limit,
-                });
-                $query_id = $res->{parameters}{return}{queryId} if !$res->{Fault};
-            } else {
+                $res = $self->_retrieve->(
+                    queryId => $query_id,
+                    retrieveParameters =>
+                        {firstRecord => $start, count => $limit,}
+                );
+                $query_id = $res->{parameters}{return}{queryId}
+                    if !$res->{Fault};
+            }
+            else {
                 $res = $self->_search->(
                     queryParameters => {
-                        databaseId => 'WOS',
+                        databaseId    => 'WOS',
                         queryLanguage => 'en',
-                        userQuery => $self->query,
+                        userQuery     => $self->query,
                     },
-                    retrieveParameters => {
-                        firstRecord => $start,
-                        count => $limit,
-                    },
+                    retrieveParameters =>
+                        {firstRecord => $start, count => $limit,},
                 );
             }
 
             if ($res->{Fault}) {
+
                 # TODO
             }
 
             $total //= $res->{parameters}{return}{recordsFound};
             $start += $limit;
 
-            my $xml = XMLin($res->{parameters}{return}{records}, ForceArray => 1);
+            my $xml
+                = XMLin($res->{parameters}{return}{records}, ForceArray => 1);
             $recs = $xml->{REC};
         }
 
         shift @$recs;
-    }
+        }
 }
 
 1;
