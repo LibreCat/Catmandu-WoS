@@ -14,6 +14,14 @@ __END__
 
 Catmandu::WoS - Catmandu modules to work with the Web Of Science web services
 
+=head1 MODULES
+
+=over
+
+=item * L<Catmandu::Importer::WoS>
+
+=back
+
 =head1 AUTHOR
 
 Nicolas Steenlant E<lt>nicolas.steenlant@ugent.beE<gt>

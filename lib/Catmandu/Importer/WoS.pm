@@ -129,11 +129,23 @@ __END__
 
 =head1 NAME
 
-Catmandu::Importer::WoS - Blah blah blah
+Catmandu::Importer::WoS - Import Web of Science records
 
 =head1 SYNOPSIS
 
-  use Catmandu::Importer::WoS;
+    # On the command line
+
+    $ catmandu convert WoS --username XXX -password XXX --query 'TS=(lead OR cadmium)' to YAML
+
+    # In perl
+
+    use Catmandu::Importer::WoS;
+    
+    my $wos = Catmandu::Importer::WoS->new(username => 'XXX', password => 'XXX', query => 'TS=(lead OR cadmium)');
+    $wos->each(sub {
+        my $record = shift;
+        # ...
+    });
 
 =head1 DESCRIPTION
 
