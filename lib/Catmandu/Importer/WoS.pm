@@ -157,10 +157,6 @@ Catmandu::Importer::WoS - Import Web of Science records
         # ...
     });
 
-=head1 DESCRIPTION
-
-Catmandu::Importer::WoS is
-
 =head1 AUTHOR
 
 Nicolas Steenlant E<lt>nicolas.steenlant@ugent.beE<gt>
