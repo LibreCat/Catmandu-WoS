@@ -10,6 +10,16 @@ sub xml {
 
 1;
 
+1;
+
+=encoding utf-8
+
+=head1 NAME
+
+Catmandu::WoS::WSDL - WoK web service wsdl
+
+=cut
+
 __DATA__
 <?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:woksearch="http://woksearch.v3.wokmws.thomsonreuters.com" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" name="WokSearchService" targetNamespace="http://woksearch.v3.wokmws.thomsonreuters.com">
 <wsdl:documentation>The namespace in the WokSearch Web service version 2 was "http://woksearch.cxf.wokmws.thomsonreuters.com".</wsdl:documentation>

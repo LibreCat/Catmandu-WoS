@@ -7,19 +7,18 @@ my $pkg = 'Catmandu::Importer::WoS';
 
 require_ok $pkg;
 
-my $importer = $pkg->new(username => $ENV{WOK_USERNAME}, password => $ENV{WOK_PASSWORD}, query => 'TS=(cadmium OR lead)');
+SKIP: {
+    skip "env WOK_USERNAME, WOK_PASSWORD not defined"
+        unless $ENV{WOK_USERNAME} && $ENV{WOK_PASSWORD};
 
-lives_ok { $importer->wsdl };
-lives_ok { $importer->auth_wsdl };
+    my $importer = $pkg->new(username => $ENV{WOK_USERNAME}, password => $ENV{WOK_PASSWORD}, query => 'TS=(cadmium OR lead)');
 
-like $importer->wsdl, qr/^<\?xml /;
-like $importer->auth_wsdl, qr/^<\?xml /;
+    ok is_string($importer->session_id);
 
-ok is_string($importer->session_id);
+    my $rec = $importer->first;
 
-my $rec = $importer->first;
-
-ok is_hash_ref($rec);
-ok is_string($rec->{UID});
+    ok is_hash_ref($rec);
+    ok is_string($rec->{UID});
+}
 
 done_testing;
