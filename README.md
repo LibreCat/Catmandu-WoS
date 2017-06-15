@@ -2,6 +2,10 @@
 
 Catmandu::WoS - Catmandu modules to work with the Web Of Science web services
 
+# MODULES
+
+- [Catmandu::Importer::WoS](https://metacpan.org/pod/Catmandu::Importer::WoS)
+
 # AUTHOR
 
 Nicolas Steenlant <nicolas.steenlant@ugent.be>
