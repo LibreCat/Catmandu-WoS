@@ -2,7 +2,7 @@ package Catmandu::Importer::WoS;
 
 use Catmandu::Sane;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use MIME::Base64 qw(encode_base64);
 use XML::Compile::WSDL11;
