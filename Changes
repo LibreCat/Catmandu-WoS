@@ -1,6 +1,7 @@
 Revision history for Catmandu-WoS
 
 {{$NEXT}}
+        - support citedReferences and citedReferencesRetrieve
 
 0.01  2017-06-15 13:56:46 CEST
         - Initial release
