@@ -20,6 +20,8 @@ Catmandu::WoS - Catmandu modules to work with the Web Of Science web services
 
 =item * L<Catmandu::Importer::WoS>
 
+=item * L<Catmandu::Importer::WoSCitedReferences>
+
 =back
 
 =head1 AUTHOR
