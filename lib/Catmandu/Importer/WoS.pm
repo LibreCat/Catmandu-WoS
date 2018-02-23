@@ -4,105 +4,139 @@ use Catmandu::Sane;
 
 our $VERSION = '0.02';
 
-use MIME::Base64 qw(encode_base64);
-use XML::Compile::WSDL11;
-use XML::Compile::SOAP11;
-use XML::Compile::Transport::SOAPHTTP;
-use XML::LibXML::Simple qw(XMLin);
-use Catmandu::WoS::WSDL;
-use Catmandu::WoS::AuthWSDL;
 use Moo;
+use Catmandu::Util qw(xml_escape);
+use XML::LibXML::Simple qw(XMLin);
 use namespace::clean;
 
-with 'Catmandu::Importer';
+with 'Catmandu::WoS::Base';
 
-has username => (is => 'ro', required => 1);
-has password => (is => 'ro', required => 1);
-has query    => (is => 'ro');
-has cited_references => (is => 'ro');
-has session_id       => (is => 'lazy');
-has _init            => (is => 'lazy');
+has query => (is => 'ro', required => 1);
+has symbolic_timespan => (is => 'ro');
+has timespan_begin => (is => 'ro');
+has timespan_end => (is => 'ro');
 
-# clients
-has _search                  => (is => 'rwp');
-has _retrieve                => (is => 'rwp');
-has _citedReferences         => (is => 'rwp');
-has _citedReferencesRetrieve => (is => 'rwp');
-
-sub _build_session_id {
-    my ($self) = @_;
-
-    my $wsdl = XML::Compile::WSDL11->new(Catmandu::WoS::AuthWSDL->xml);
-
-    my $authenticate = $wsdl->compileClient(
-        'authenticate',
-        transport_hook => sub {
-            my ($req, $trace) = @_;
-            my $auth = 'Basic '
-                . encode_base64(join(':', $self->username, $self->password));
-            $req->header(Authorization => $auth);
-            my $ua = $trace->{user_agent};
-            $ua->request($req);
-        }
-    );
-
-    undef $wsdl;
-
-    my $res = $authenticate->();
-
-    if ($res->{Fault}) {
-
-        # TODO
-    }
-
-    $res->{parameters}{return};
+sub _search_url {
+    state $url = 'http://search.webofknowledge.com/esti/wokmws/ws/WokSearch';
 }
 
-sub _build__init {
-    my ($self) = @_;
-    my $session_id = $self->session_id;
-
-    my $wsdl = XML::Compile::WSDL11->new(Catmandu::WoS::WSDL->xml);
-
-    my $transport_hook = sub {
-        my ($req, $trace) = @_;
-        $req->header(Cookie => qq|SID="$session_id"|);
-        my $ua = $trace->{user_agent};
-        $ua->request($req);
+sub _search_ns {
+    state $ns = {
+        'soap' => 'http://schemas.xmlsoap.org/soap/envelope/',
+        'ns2'  => 'http://woksearch.v3.wokmws.thomsonreuters.com',
     };
+}
 
-    if ($self->query) {
-        $self->_set__search(
-            $wsdl->compileClient('search', transport_hook => $transport_hook)
-        );
-        $self->_set__retrieve(
-            $wsdl->compileClient(
-                'retrieve', transport_hook => $transport_hook
-            )
-        );
-    }
-    elsif ($self->cited_references) {
-        $self->_set__citedReferences(
-            $wsdl->compileClient(
-                'citedReferences', transport_hook => $transport_hook
-            )
-        );
-        $self->_set__citedReferencesRetrieve(
-            $wsdl->compileClient(
-                'citedReferencesRetrieve', transport_hook => $transport_hook
-            )
-        );
+sub _search_content {
+    my ($self, $start, $limit) = @_;
+
+    my $query = xml_escape($self->query);
+
+    my $symbolic_timespan_xml = '';
+    my $timespan_xml = '';
+
+    if (my $ts = $self->symbolic_timespan) {
+        $symbolic_timespan_xml = "<symbolicTimeSpan>$ts</symbolicTimeSpan>";
+    } elsif ($self->timespan_begin & $self->timespan_end) {
+        my $tsb = $self->timespan_begin;
+        my $tse = $self->timespan_end;
+        $timespan_xml = "<timeSpan><begin>$tsb</begin><end>$tse</end></timeSpan>";
     }
 
-    undef $wsdl;
+    <<EOF;
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+   xmlns:woksearch="http://woksearch.v3.wokmws.thomsonreuters.com">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <woksearch:search>
+         <queryParameters>
+            <databaseId>WOS</databaseId>
+            <userQuery>$query</userQuery>
+            $symbolic_timespan_xml
+            $timespan_xml
+            <queryLanguage>en</queryLanguage>
+         </queryParameters>
+         <retrieveParameters>
+            <firstRecord>$start</firstRecord>
+          <count>$limit</count>
+            <option>
+               <key>RecordIDs</key>
+               <value>On</value>
+            </option>
+            <option>
+               <key>targetNamespace</key>
+               <value>http://scientific.thomsonreuters.com/schema/wok5.4/public/FullRecord</value>
+            </option>
+     </retrieveParameters>
+      </woksearch:search>
+   </soapenv:Body>
+</soapenv:Envelope>
+EOF
+}
 
-    1;
+sub _search_retrieve_content {
+    my ($self, $query_id, $start, $limit) = @_;
+
+    $query_id = xml_escape($query_id);
+
+    <<EOF;
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Body>
+  <ns2:retrieve xmlns:ns2="http://woksearch.v3.wokmws.thomsonreuters.com">
+    <queryId>$query_id</queryId>
+    <retrieveParameters>
+       <firstRecord>$start</firstRecord>
+       <count>$limit</count>
+    </retrieveParameters>
+  </ns2:retrieve>
+</soap:Body>
+</soap:Envelope>
+EOF
+}
+
+sub _parse_recs {
+    my ($self, $xml) = @_;
+
+    XMLin($xml, ForceArray => 1)->{REC};
+}
+
+sub _search {
+    my ($self, $start, $limit) = @_;
+
+    my $xpc = $self->_soap_request(
+        $self->_search_url,
+        $self->_search_ns,
+        $self->_search_content($start, $limit),
+        $self->session_id
+    );
+
+    my $recs_xml = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:searchResponse/return/records');
+    my $total = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:searchResponse/return/recordsFound');
+    my $query_id = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:searchResponse/return/queryId');
+
+    my $recs = $self->_parse_recs($recs_xml);
+
+    return $recs, $total, $query_id;
+}
+
+sub _search_retrieve {
+    my ($self, $query_id, $start, $limit) = @_;
+
+    my $xpc = $self->_soap_request(
+        $self->_search_url,
+        $self->_search_ns,
+        $self->_search_retrieve_content($query_id, $start, $limit),
+        $self->session_id
+    );
+
+    my $recs_xml = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:retrieveResponse/return/records');
+    my $recs = $self->_parse_recs($recs_xml);
+
+    return $recs;
 }
 
 sub generator {
     my ($self) = @_;
-
-    $self->_init;
 
     sub {
         state $recs = [];
@@ -111,76 +145,22 @@ sub generator {
         state $limit = 100;
         state $total;
 
-        if (!@$recs) {
+        unless (@$recs) {
             return if defined $total && $start > $total;
 
-            my $res;
-
             if (defined $query_id) {
-                my $args = {
-                    queryId => $query_id,
-                    retrieveParameters =>
-                        {firstRecord => $start, count => $limit,}
-                };
-                if ($self->query) {
-                    $res = $self->_retrieve->(%$args);
-                }
-                elsif ($self->cited_references) {
-                    $res = $self->_citedReferencesRetrieve->(%$args);
-                }
-
-                $query_id = $res->{parameters}{return}{queryId}
-                    if !$res->{Fault};
+                $recs = $self->_search_retrieve($query_id, $start, $limit);
             }
             else {
-                my $args = {
-                    retrieveParameters =>
-                        {firstRecord => $start, count => $limit,},
-
-                };
-                if ($self->query) {
-                    $res = $self->_search->(
-                        %$args,
-                        queryParameters => {
-                            databaseId    => 'WOS',
-                            queryLanguage => 'en',
-                            userQuery     => $self->query,
-                        },
-                    );
-                }
-                elsif ($self->cited_references) {
-                    $res = $self->_citedReferences->(
-                        %$args,
-                        databaseId    => 'WOS',
-                        queryLanguage => 'en',
-                        uid           => $self->cited_references,
-                    );
-                }
+                ($recs, $total, $query_id) = $self->_search($start, $limit);
+                $total || return;
             }
-
-            if ($res->{Fault}) {
-
-                # TODO
-            }
-
-            $total //= $res->{parameters}{return}{recordsFound};
-
-            return unless $total;
 
             $start += $limit;
-
-            if ($self->query) {
-                my $xml = XMLin($res->{parameters}{return}{records},
-                    ForceArray => 1);
-                $recs = $xml->{REC};
-            }
-            elsif ($self->cited_references) {
-                $recs = $res->{parameters}{return}{references};
-            }
         }
 
         shift @$recs;
-        }
+    };
 }
 
 1;
@@ -197,7 +177,7 @@ Catmandu::Importer::WoS - Import Web of Science records
 
     # On the command line
 
-    $ catmandu convert WoS --username XXX -password XXX --query 'TS=(lead OR cadmium)' to YAML
+    $ catmandu convert WoS --username XXX --password XXX --query 'TS=(lead OR cadmium)' to YAML
 
     # In perl
 
@@ -206,12 +186,6 @@ Catmandu::Importer::WoS - Import Web of Science records
     my $wos = Catmandu::Importer::WoS->new(username => 'XXX', password => 'XXX', query => 'TS=(lead OR cadmium)');
     $wos->each(sub {
         my $record = shift;
-        # ...
-    });
-    
-    my $wos = Catmandu::Importer::WoS->new(username => 'XXX', password => 'XXX', cited_references => '000393351200025');
-    $wos->each(sub {
-        my $cite = shift;
         # ...
     });
 
