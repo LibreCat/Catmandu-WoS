@@ -1,4 +1,4 @@
-package Catmandu::Importer::WoSCitingArticles;
+package Catmandu::Importer::WoSRelatedRecords;
 
 use Catmandu::Sane;
 
@@ -14,7 +14,7 @@ has uid => (is => 'ro', required => 1);
 has timespan_begin => (is => 'ro');
 has timespan_end => (is => 'ro');
 
-sub _citing_articles_content {
+sub _related_records_content {
     my ($self, $start, $limit) = @_;
 
     my $uid = xml_escape($self->uid);
@@ -31,7 +31,7 @@ sub _citing_articles_content {
    xmlns:woksearch="http://woksearch.v3.wokmws.thomsonreuters.com">
    <soapenv:Header/>
    <soapenv:Body>
-      <woksearch:citingArticles>
+      <woksearch:relatedRecords>
          <databaseId>WOS</databaseId>
          <uid>$uid</uid>
          $timespan_xml
@@ -48,7 +48,7 @@ sub _citing_articles_content {
                <value>http://scientific.thomsonreuters.com/schema/wok5.4/public/FullRecord</value>
             </option>
         </retrieveParameters>
-      </woksearch:citingArticles>
+      </woksearch:relatedRecords>
    </soapenv:Body>
 </soapenv:Envelope>
 EOF
@@ -60,13 +60,13 @@ sub _search {
     my $xpc = $self->_soap_request(
         $self->_search_url,
         $self->_search_ns,
-        $self->_citing_articles_content($start, $limit),
+        $self->_related_records_content($start, $limit),
         $self->session_id
     );
 
-    my $recs_xml = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:citingArticlesResponse/return/records');
-    my $total = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:citingArticlesResponse/return/recordsFound');
-    my $query_id = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:citingArticlesResponse/return/queryId');
+    my $recs_xml = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:relatedRecordsResponse/return/records');
+    my $total = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:relatedRecordsResponse/return/recordsFound');
+    my $query_id = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:relatedRecordsResponse/return/queryId');
 
     my $recs = $self->_parse_recs($recs_xml);
 
@@ -81,19 +81,19 @@ __END__
 
 =head1 NAME
 
-Catmandu::Importer::WoSCitingArticles - Import Web of Science citing articles for a given record
+Catmandu::Importer::WoSRelatedRecords - Import Web of Science related records for a given record
 
 =head1 SYNOPSIS
 
     # On the command line
 
-    $ catmandu convert WoSCitingArticles --username XXX --password XXX --uid 'WOS:000413520000001' to YAML
+    $ catmandu convert WoSRelatedRecords --username XXX --password XXX --uid 'WOS:000413520000001' to YAML
 
     # In perl
 
-    use Catmandu::Importer::WoSCitingArticles;
+    use Catmandu::Importer::WoSRelatedRecords;
     
-    my $wos = Catmandu::Importer::WoSCitingArticles->new(username => 'XXX', password => 'XXX', uid => 'WOS:000413520000001');
+    my $wos = Catmandu::Importer::WoSRelatedRecords->new(username => 'XXX', password => 'XXX', uid => 'WOS:000413520000001');
     $wos->each(sub {
         my $record = shift;
         # ...
