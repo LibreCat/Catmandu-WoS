@@ -64,8 +64,8 @@ sub _search_content {
 EOF
 }
 
-sub _search_reponse_type {
-    'searchResponse/return/records';
+sub _search_response_type {
+    'searchResponse';
 }
 
 1;

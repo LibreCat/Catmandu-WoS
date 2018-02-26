@@ -38,7 +38,7 @@ sub _retrieve_response_type {
 sub _find_records {
     my ($self, $xpc, $response_type) = @_;
 
-    my $recs_xml = $xpc->findvalue(
+    my $xml = $xpc->findvalue(
         "/soap:Envelope/soap:Body/ns2:$response_type/return/records");
     XMLin($xml, ForceArray => 1)->{REC};
 }

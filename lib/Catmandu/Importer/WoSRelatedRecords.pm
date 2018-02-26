@@ -14,7 +14,7 @@ has uid => (is => 'ro', required => 1);
 has timespan_begin => (is => 'ro');
 has timespan_end   => (is => 'ro');
 
-sub _related_records_content {
+sub _search_content {
     my ($self, $start, $limit) = @_;
 
     my $uid = xml_escape($self->uid);
