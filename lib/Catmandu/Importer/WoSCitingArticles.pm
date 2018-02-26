@@ -8,13 +8,13 @@ use Moo;
 use Catmandu::Util qw(xml_escape);
 use namespace::clean;
 
-with 'Catmandu::WoS::Base';
+with 'Catmandu::WoS::SearchRecords';
 
 has uid => (is => 'ro', required => 1);
 has timespan_begin => (is => 'ro');
 has timespan_end   => (is => 'ro');
 
-sub _citing_articles_content {
+sub _search_content {
     my ($self, $start, $limit) = @_;
 
     my $uid = xml_escape($self->uid);
@@ -55,26 +55,8 @@ sub _citing_articles_content {
 EOF
 }
 
-sub _search {
-    my ($self, $start, $limit) = @_;
-
-    my $xpc
-        = $self->_soap_request($self->_search_url, $self->_search_ns,
-        $self->_citing_articles_content($start, $limit),
-        $self->session_id);
-
-    my $recs_xml = $xpc->findvalue(
-        '/soap:Envelope/soap:Body/ns2:citingArticlesResponse/return/records');
-    my $total
-        = $xpc->findvalue(
-        '/soap:Envelope/soap:Body/ns2:citingArticlesResponse/return/recordsFound'
-        );
-    my $query_id = $xpc->findvalue(
-        '/soap:Envelope/soap:Body/ns2:citingArticlesResponse/return/queryId');
-
-    my $recs = $self->_parse_recs($recs_xml);
-
-    return $recs, $total, $query_id;
+sub _search_response_type {
+    'citingArticlesResponse';
 }
 
 1;

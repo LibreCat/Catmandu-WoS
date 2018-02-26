@@ -8,11 +8,11 @@ use Moo;
 use Catmandu::Util qw(is_string xml_escape);
 use namespace::clean;
 
-with 'Catmandu::WoS::Base';
+with 'Catmandu::WoS::SearchBase';
 
 has uid => (is => 'ro', required => 1);
 
-sub _cited_references_content {
+sub _search_content {
     my ($self, $start, $limit) = @_;
 
     my $uid = xml_escape($self->uid);
@@ -40,7 +40,7 @@ sub _cited_references_content {
 EOF
 }
 
-sub _cited_references_retrieve_content {
+sub _retrieve_content {
     my ($self, $query_id, $start, $limit) = @_;
 
     $query_id = xml_escape($query_id);
@@ -61,9 +61,18 @@ sub _cited_references_retrieve_content {
 EOF
 }
 
-sub _find_references {
-    my ($self, $xpc, $path) = @_;
-    my @nodes = $xpc->findnodes($path);
+sub _search_response_type {
+    'citedReferencesResponse';
+}
+
+sub _retrieve_response_type {
+    'citedReferencesRetrieveResponse';
+}
+
+sub _find_records {
+    my ($self, $xpc, $response_type) = @_;
+    my @nodes = $xpc->findnodes(
+        "/soap:Envelope/soap:Body/ns2:$response_type/return/references");
     [
         map {
             my $node = $_;
@@ -78,48 +87,6 @@ sub _find_references {
             $ref;
         } @nodes
     ];
-}
-
-sub _search {
-    my ($self, $start, $limit) = @_;
-
-    my $xpc
-        = $self->_soap_request($self->_search_url, $self->_search_ns,
-        $self->_cited_references_content($start, $limit),
-        $self->session_id);
-
-    my $references = $self->_find_references($xpc,
-        '/soap:Envelope/soap:Body/ns2:citedReferencesResponse/return/references'
-    );
-    my @reference_nodes
-        = $xpc->findnodes(
-        '/soap:Envelope/soap:Body/ns2:citedReferencesResponse/return/references'
-        );
-    my $total
-        = $xpc->findvalue(
-        '/soap:Envelope/soap:Body/ns2:citedReferencesResponse/return/recordsFound'
-        );
-    my $query_id
-        = $xpc->findvalue(
-        '/soap:Envelope/soap:Body/ns2:citedReferencesResponse/return/queryId'
-        );
-
-    return $references, $total, $query_id;
-}
-
-sub _retrieve {
-    my ($self, $query_id, $start, $limit) = @_;
-
-    my $xpc = $self->_soap_request(
-        $self->_search_url,
-        $self->_search_ns,
-        $self->_cited_references_retrieve_content($query_id, $start, $limit),
-        $self->session_id
-    );
-
-    $self->_find_references($xpc,
-        '/soap:Envelope/soap:Body/ns2:citedReferencesRetrieveResponse/return/references'
-    );
 }
 
 1;

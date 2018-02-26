@@ -1,4 +1,4 @@
-package Catmandu::WoS::Base;
+package Catmandu::WoS::SearchBase;
 
 use Catmandu::Sane;
 
@@ -8,7 +8,6 @@ use Moo::Role;
 use URI::Escape qw(uri_escape);
 use XML::LibXML;
 use XML::LibXML::XPathContext;
-use XML::LibXML::Simple qw(XMLin);
 use namespace::clean;
 
 with 'Catmandu::Importer';
@@ -17,13 +16,15 @@ has username   => (is => 'ro');
 has password   => (is => 'ro');
 has session_id => (is => 'lazy');
 
-requires '_search';
+requires '_search_content';
+requires '_retrieve_content';
+requires '_search_response_type';
+requires '_retrieve_response_type';
+requires '_find_records';
 
 sub _auth_url {
     my ($self) = @_;
 
-    my $username = uri_escape($self->username);
-    my $password = uri_escape($self->password);
     'http://'
         . uri_escape($self->username) . ':'
         . uri_escape($self->password)
@@ -61,47 +62,6 @@ sub _search_ns {
     };
 }
 
-sub _retrieve_content {
-    my ($self, $query_id, $start, $limit) = @_;
-
-    $query_id = xml_escape($query_id);
-
-    <<EOF;
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-<soap:Body>
-  <ns2:retrieve xmlns:ns2="http://woksearch.v3.wokmws.thomsonreuters.com">
-    <queryId>$query_id</queryId>
-    <retrieveParameters>
-       <firstRecord>$start</firstRecord>
-       <count>$limit</count>
-    </retrieveParameters>
-  </ns2:retrieve>
-</soap:Body>
-</soap:Envelope>
-EOF
-}
-
-sub _retrieve {
-    my ($self, $query_id, $start, $limit) = @_;
-
-    my $xpc
-        = $self->_soap_request($self->_search_url, $self->_search_ns,
-        $self->_retrieve_content($query_id, $start, $limit),
-        $self->session_id);
-
-    my $recs_xml = $xpc->findvalue(
-        '/soap:Envelope/soap:Body/ns2:retrieveResponse/return/records');
-    my $recs = $self->_parse_recs($recs_xml);
-
-    return $recs;
-}
-
-sub _parse_recs {
-    my ($self, $xml) = @_;
-
-    XMLin($xml, ForceArray => 1)->{REC};
-}
-
 sub _soap_request {
     my ($self, $url, $ns, $content, $session_id) = @_;
 
@@ -130,6 +90,36 @@ sub _build_session_id {
         '/soap:Envelope/soap:Body/ns2:authenticateResponse/return');
 
     return $session_id;
+}
+
+sub _search {
+    my ($self, $start, $limit) = @_;
+
+    my $response_type = $self->_search_response_type;
+
+    my $xpc
+        = $self->_soap_request($self->_search_url, $self->_search_ns,
+        $self->_search_content($start, $limit),
+        $self->session_id);
+
+    my $recs = $self->_find_records($xpc, $response_type);
+    my $total = $xpc->findvalue(
+        "/soap:Envelope/soap:Body/ns2:$response_type/return/recordsFound");
+    my $query_id = $xpc->findvalue(
+        "/soap:Envelope/soap:Body/ns2:$response_type/return/queryId");
+
+    return $recs, $total, $query_id;
+}
+
+sub _retrieve {
+    my ($self, $query_id, $start, $limit) = @_;
+
+    my $xpc
+        = $self->_soap_request($self->_search_url, $self->_search_ns,
+        $self->_retrieve_content($query_id, $start, $limit),
+        $self->session_id);
+
+    $self->_find_records($xpc, $self->_retrieve_response_type);
 }
 
 sub generator {
