@@ -24,8 +24,10 @@ sub _auth_url {
 
     my $username = uri_escape($self->username);
     my $password = uri_escape($self->password);
-    'http://'.uri_escape($self->username).':'.uri_escape($self->password).
-        '@search.webofknowledge.com/esti/wokmws/ws/WOKMWSAuthenticate';
+    'http://'
+        . uri_escape($self->username) . ':'
+        . uri_escape($self->password)
+        . '@search.webofknowledge.com/esti/wokmws/ws/WOKMWSAuthenticate';
 }
 
 sub _auth_ns {
@@ -82,14 +84,13 @@ EOF
 sub _retrieve {
     my ($self, $query_id, $start, $limit) = @_;
 
-    my $xpc = $self->_soap_request(
-        $self->_search_url,
-        $self->_search_ns,
+    my $xpc
+        = $self->_soap_request($self->_search_url, $self->_search_ns,
         $self->_retrieve_content($query_id, $start, $limit),
-        $self->session_id
-    );
+        $self->session_id);
 
-    my $recs_xml = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:retrieveResponse/return/records');
+    my $recs_xml = $xpc->findvalue(
+        '/soap:Envelope/soap:Body/ns2:retrieveResponse/return/records');
     my $recs = $self->_parse_recs($recs_xml);
 
     return $recs;
@@ -110,13 +111,8 @@ sub _soap_request {
         push @$headers, 'Cookie', qq|SID="$session_id"|;
     }
 
-    my $res_content = $self->_http_request(
-        'POST',
-        $url,
-        $headers,
-        $content,
-        $self->_http_timing_tries,
-    );
+    my $res_content = $self->_http_request('POST', $url, $headers, $content,
+        $self->_http_timing_tries,);
 
     my $doc = XML::LibXML->new(huge => 1)->load_xml(string => $res_content);
     my $xpc = XML::LibXML::XPathContext->new($doc);
@@ -127,13 +123,11 @@ sub _soap_request {
 sub _build_session_id {
     my ($self) = @_;
 
-    my $xpc = $self->_soap_request(
-        $self->_auth_url,
-        $self->_auth_ns,
-        $self->_auth_content,
-    );
+    my $xpc = $self->_soap_request($self->_auth_url, $self->_auth_ns,
+        $self->_auth_content,);
 
-    my $session_id = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:authenticateResponse/return');
+    my $session_id = $xpc->findvalue(
+        '/soap:Envelope/soap:Body/ns2:authenticateResponse/return');
 
     return $session_id;
 }

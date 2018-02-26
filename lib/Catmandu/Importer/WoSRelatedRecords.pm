@@ -12,7 +12,7 @@ with 'Catmandu::WoS::Base';
 
 has uid => (is => 'ro', required => 1);
 has timespan_begin => (is => 'ro');
-has timespan_end => (is => 'ro');
+has timespan_end   => (is => 'ro');
 
 sub _related_records_content {
     my ($self, $start, $limit) = @_;
@@ -23,7 +23,8 @@ sub _related_records_content {
     if ($self->timespan_begin & $self->timespan_end) {
         my $tsb = $self->timespan_begin;
         my $tse = $self->timespan_end;
-        $timespan_xml = "<timeSpan><begin>$tsb</begin><end>$tse</end></timeSpan>";
+        $timespan_xml
+            = "<timeSpan><begin>$tsb</begin><end>$tse</end></timeSpan>";
     }
 
     <<EOF;
@@ -57,16 +58,19 @@ EOF
 sub _search {
     my ($self, $start, $limit) = @_;
 
-    my $xpc = $self->_soap_request(
-        $self->_search_url,
-        $self->_search_ns,
+    my $xpc
+        = $self->_soap_request($self->_search_url, $self->_search_ns,
         $self->_related_records_content($start, $limit),
-        $self->session_id
-    );
+        $self->session_id);
 
-    my $recs_xml = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:relatedRecordsResponse/return/records');
-    my $total = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:relatedRecordsResponse/return/recordsFound');
-    my $query_id = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:relatedRecordsResponse/return/queryId');
+    my $recs_xml = $xpc->findvalue(
+        '/soap:Envelope/soap:Body/ns2:relatedRecordsResponse/return/records');
+    my $total
+        = $xpc->findvalue(
+        '/soap:Envelope/soap:Body/ns2:relatedRecordsResponse/return/recordsFound'
+        );
+    my $query_id = $xpc->findvalue(
+        '/soap:Envelope/soap:Body/ns2:relatedRecordsResponse/return/queryId');
 
     my $recs = $self->_parse_recs($recs_xml);
 

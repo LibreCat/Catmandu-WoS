@@ -64,31 +64,45 @@ EOF
 sub _find_references {
     my ($self, $xpc, $path) = @_;
     my @nodes = $xpc->findnodes($path);
-    [map {
-        my $node = $_;
-        my $ref = {};
-        for my $key (qw(uid docid articleId citedAuthor timesCited year page volume citedTitle citedWork hot)) {
-            my $val = $node->findvalue($key);
-            $ref->{$key} = $val if is_string($val);
-        }
-        $ref;
-    } @nodes];
+    [
+        map {
+            my $node = $_;
+            my $ref  = {};
+            for my $key (
+                qw(uid docid articleId citedAuthor timesCited year page volume citedTitle citedWork hot)
+                )
+            {
+                my $val = $node->findvalue($key);
+                $ref->{$key} = $val if is_string($val);
+            }
+            $ref;
+        } @nodes
+    ];
 }
 
 sub _search {
     my ($self, $start, $limit) = @_;
 
-    my $xpc = $self->_soap_request(
-        $self->_search_url,
-        $self->_search_ns,
+    my $xpc
+        = $self->_soap_request($self->_search_url, $self->_search_ns,
         $self->_cited_references_content($start, $limit),
-        $self->session_id
-    );
+        $self->session_id);
 
-    my $references = $self->_find_references($xpc, '/soap:Envelope/soap:Body/ns2:citedReferencesResponse/return/references');
-    my @reference_nodes = $xpc->findnodes('/soap:Envelope/soap:Body/ns2:citedReferencesResponse/return/references');
-    my $total = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:citedReferencesResponse/return/recordsFound');
-    my $query_id = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:citedReferencesResponse/return/queryId');
+    my $references = $self->_find_references($xpc,
+        '/soap:Envelope/soap:Body/ns2:citedReferencesResponse/return/references'
+    );
+    my @reference_nodes
+        = $xpc->findnodes(
+        '/soap:Envelope/soap:Body/ns2:citedReferencesResponse/return/references'
+        );
+    my $total
+        = $xpc->findvalue(
+        '/soap:Envelope/soap:Body/ns2:citedReferencesResponse/return/recordsFound'
+        );
+    my $query_id
+        = $xpc->findvalue(
+        '/soap:Envelope/soap:Body/ns2:citedReferencesResponse/return/queryId'
+        );
 
     return $references, $total, $query_id;
 }
@@ -103,7 +117,9 @@ sub _retrieve {
         $self->session_id
     );
 
-    $self->_find_references($xpc, '/soap:Envelope/soap:Body/ns2:citedReferencesRetrieveResponse/return/references');
+    $self->_find_references($xpc,
+        '/soap:Envelope/soap:Body/ns2:citedReferencesRetrieveResponse/return/references'
+    );
 }
 
 1;
