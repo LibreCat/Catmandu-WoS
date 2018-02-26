@@ -75,7 +75,7 @@ sub _find_references {
     } @nodes];
 }
 
-sub _cited_references {
+sub _search {
     my ($self, $start, $limit) = @_;
 
     my $xpc = $self->_soap_request(
@@ -93,7 +93,7 @@ sub _cited_references {
     return $references, $total, $query_id;
 }
 
-sub _cited_references_retrieve {
+sub _retrieve {
     my ($self, $query_id, $start, $limit) = @_;
 
     my $xpc = $self->_soap_request(
@@ -104,34 +104,6 @@ sub _cited_references_retrieve {
     );
 
     $self->_find_references($xpc, '/soap:Envelope/soap:Body/ns2:citedReferencesRetrieveResponse/return/references');
-}
-
-sub generator {
-    my ($self) = @_;
-
-    sub {
-        state $recs = [];
-        state $query_id;
-        state $start = 1;
-        state $limit = 100;
-        state $total;
-
-        unless (@$recs) {
-            return if defined $total && $start > $total;
-
-            if (defined $query_id) {
-                $recs = $self->_cited_references_retrieve($query_id, $start, $limit);
-            }
-            else {
-                ($recs, $total, $query_id) = $self->_cited_references($start, $limit);
-                $total || return;
-            }
-
-            $start += $limit;
-        }
-
-        shift @$recs;
-    };
 }
 
 1;
@@ -150,13 +122,13 @@ Catmandu::Importer::WoSCitedReferences - Import Web of Science cited references 
 
     # On the command line
 
-    $ catmandu convert WoS --username XXX --password XXX --uid 'WOS:000413520000001' to YAML
+    $ catmandu convert WoSCitedReferences --username XXX --password XXX --uid 'WOS:000413520000001' to YAML
 
     # In perl
 
     use Catmandu::Importer::WoS;
     
-    my $wos = Catmandu::Importer::WoS->new(username => 'XXX', password => 'XXX', uid => 'WOS:000413520000001');
+    my $wos = Catmandu::Importer::WoSCitedReferences->new(username => 'XXX', password => 'XXX', uid => 'WOS:000413520000001');
     $wos->each(sub {
         my $cite = shift;
         # ...

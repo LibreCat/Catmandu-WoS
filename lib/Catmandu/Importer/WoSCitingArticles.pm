@@ -1,31 +1,26 @@
-package Catmandu::Importer::WoS;
+package Catmandu::Importer::WoSCitingArticles;
 
 use Catmandu::Sane;
 
 our $VERSION = '0.02';
 
 use Moo;
-use Catmandu::Util qw(xml_escape);
+use Catmandu::Util qw(is_string xml_escape);
 use namespace::clean;
 
 with 'Catmandu::WoS::Base';
 
-has query => (is => 'ro', required => 1);
-has symbolic_timespan => (is => 'ro');
+has uid => (is => 'ro', required => 1);
 has timespan_begin => (is => 'ro');
 has timespan_end => (is => 'ro');
 
-sub _search_content {
+sub _citing_articles_content {
     my ($self, $start, $limit) = @_;
 
-    my $query = xml_escape($self->query);
+    my $uid = xml_escape($self->uid);
 
-    my $symbolic_timespan_xml = '';
     my $timespan_xml = '';
-
-    if (my $ts = $self->symbolic_timespan) {
-        $symbolic_timespan_xml = "<symbolicTimeSpan>$ts</symbolicTimeSpan>";
-    } elsif ($self->timespan_begin & $self->timespan_end) {
+    if ($self->timespan_begin & $self->timespan_end) {
         my $tsb = $self->timespan_begin;
         my $tse = $self->timespan_end;
         $timespan_xml = "<timeSpan><begin>$tsb</begin><end>$tse</end></timeSpan>";
@@ -36,17 +31,14 @@ sub _search_content {
    xmlns:woksearch="http://woksearch.v3.wokmws.thomsonreuters.com">
    <soapenv:Header/>
    <soapenv:Body>
-      <woksearch:search>
-         <queryParameters>
-            <databaseId>WOS</databaseId>
-            <userQuery>$query</userQuery>
-            $symbolic_timespan_xml
-            $timespan_xml
-            <queryLanguage>en</queryLanguage>
-         </queryParameters>
+      <woksearch:citingArticles>
+         <databaseId>WOS</databaseId>
+         <uid>$uid</uid>
+         $timespan_xml
+         <queryLanguage>en</queryLanguage>
          <retrieveParameters>
             <firstRecord>$start</firstRecord>
-          <count>$limit</count>
+            <count>$limit</count>
             <option>
                <key>RecordIDs</key>
                <value>On</value>
@@ -55,8 +47,8 @@ sub _search_content {
                <key>targetNamespace</key>
                <value>http://scientific.thomsonreuters.com/schema/wok5.4/public/FullRecord</value>
             </option>
-     </retrieveParameters>
-      </woksearch:search>
+        </retrieveParameters>
+      </woksearch:citingArticles>
    </soapenv:Body>
 </soapenv:Envelope>
 EOF
@@ -68,13 +60,13 @@ sub _search {
     my $xpc = $self->_soap_request(
         $self->_search_url,
         $self->_search_ns,
-        $self->_search_content($start, $limit),
+        $self->_citing_articles_content($start, $limit),
         $self->session_id
     );
 
-    my $recs_xml = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:searchResponse/return/records');
-    my $total = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:searchResponse/return/recordsFound');
-    my $query_id = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:searchResponse/return/queryId');
+    my $recs_xml = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:citingArticlesResponse/return/records');
+    my $total = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:citingArticlesResponse/return/recordsFound');
+    my $query_id = $xpc->findvalue('/soap:Envelope/soap:Body/ns2:citingArticlesResponse/return/queryId');
 
     my $recs = $self->_parse_recs($recs_xml);
 
@@ -89,19 +81,19 @@ __END__
 
 =head1 NAME
 
-Catmandu::Importer::WoS - Import Web of Science records
+Catmandu::Importer::WoSCitingArticles - Import Web of Science citing articles for a given record
 
 =head1 SYNOPSIS
 
     # On the command line
 
-    $ catmandu convert WoS --username XXX --password XXX --query 'TS=(lead OR cadmium)' to YAML
+    $ catmandu convert WoSCitingArticles --username XXX --password XXX --uid 'WOS:000413520000001' to YAML
 
     # In perl
 
-    use Catmandu::Importer::WoS;
+    use Catmandu::Importer::WoSCitingArticles;
     
-    my $wos = Catmandu::Importer::WoS->new(username => 'XXX', password => 'XXX', query => 'TS=(lead OR cadmium)');
+    my $wos = Catmandu::Importer::WoSCitingArticles->new(username => 'XXX', password => 'XXX', uid => 'WOS:000413520000001');
     $wos->each(sub {
         my $record = shift;
         # ...
