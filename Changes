@@ -1,6 +1,8 @@
 Revision history for Catmandu-WoS
 
 {{$NEXT}}
+
+0.03  2018-03-06 19:40:28 CET
         - Complete rewrite that supports the whole API
 
 0.02  2017-09-08 16:47:22 CEST
