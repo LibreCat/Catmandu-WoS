@@ -20,7 +20,7 @@ sub _search_content {
     my $uid = xml_escape($self->uid);
 
     my $timespan_xml = '';
-    if ($self->timespan_begin & $self->timespan_end) {
+    if ($self->timespan_begin && $self->timespan_end) {
         my $tsb = $self->timespan_begin;
         my $tse = $self->timespan_end;
         $timespan_xml
