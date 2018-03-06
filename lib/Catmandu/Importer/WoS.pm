@@ -26,7 +26,7 @@ sub _search_content {
     if (my $ts = $self->symbolic_timespan) {
         $symbolic_timespan_xml = "<symbolicTimeSpan>$ts</symbolicTimeSpan>";
     }
-    elsif ($self->timespan_begin & $self->timespan_end) {
+    elsif ($self->timespan_begin && $self->timespan_end) {
         my $tsb = $self->timespan_begin;
         my $tse = $self->timespan_end;
         $timespan_xml
