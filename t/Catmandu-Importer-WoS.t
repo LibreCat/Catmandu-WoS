@@ -11,13 +11,19 @@ SKIP: {
     skip "env WOS_USERNAME, WOS_PASSWORD not defined"
         unless $ENV{WOS_USERNAME} && $ENV{WOS_PASSWORD};
 
-    my $importer = $pkg->new(
+    my %args = (
         username => $ENV{WOS_USERNAME},
         password => $ENV{WOS_PASSWORD},
         query    => 'TS=(cadmium OR lead)'
     );
 
+    $args{session_id} = $ENV{WOS_SESSION_ID} if $ENV{WOS_SESSION_ID};
+
+    my $importer = $pkg->new(%args);
+
     ok is_string($importer->session_id);
+
+    $ENV{WOS_SESSION_ID} ||= $importer->session_id;
 
     my $rec = $importer->first;
 
