@@ -8,12 +8,12 @@ my $pkg = 'Catmandu::Importer::WoS';
 require_ok $pkg;
 
 SKIP: {
-    skip "env WOK_USERNAME, WOK_PASSWORD not defined"
-        unless $ENV{WOK_USERNAME} && $ENV{WOK_PASSWORD};
+    skip "env WOS_USERNAME, WOS_PASSWORD not defined"
+        unless $ENV{WOS_USERNAME} && $ENV{WOS_PASSWORD};
 
     my $importer = $pkg->new(
-        username => $ENV{WOK_USERNAME},
-        password => $ENV{WOK_PASSWORD},
+        username => $ENV{WOS_USERNAME},
+        password => $ENV{WOS_PASSWORD},
         query    => 'TS=(cadmium OR lead)'
     );
 
