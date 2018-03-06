@@ -3,7 +3,7 @@ use Test::More;
 use Test::Exception;
 use Catmandu::Util qw(is_string is_hash_ref);
 
-my $pkg = 'Catmandu::Importer::WoSCitedReferences';
+my $pkg = 'Catmandu::Importer::WoSCitingArticles';
 
 require_ok $pkg;
 
@@ -22,6 +22,7 @@ SKIP: {
     my $rec = $importer->first;
 
     ok is_hash_ref($rec);
+    ok is_string($rec->{UID});
 }
 
 done_testing;
