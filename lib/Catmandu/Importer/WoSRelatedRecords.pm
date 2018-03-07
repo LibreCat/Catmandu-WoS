@@ -2,7 +2,7 @@ package Catmandu::Importer::WoSRelatedRecords;
 
 use Catmandu::Sane;
 
-our $VERSION = '0.03';
+our $VERSION = '0.0301';
 
 use Moo;
 use Catmandu::Util qw(xml_escape);

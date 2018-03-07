@@ -26,7 +26,7 @@ my %module_build_args = (
     "Catmandu" => "1.09",
     "URI::Escape" => 0,
     "XML::LibXML" => "2.0132",
-    "XML::LibXML::Simple" => "0.99",
+    "XML::LibXML::Simple" => "0.97",
     "namespace::clean" => 0,
     "perl" => "5.008005"
   },
