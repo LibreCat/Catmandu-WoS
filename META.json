@@ -44,14 +44,15 @@
          "requires" : {
             "Catmandu" : "1.09",
             "URI::Escape" : "0",
-            "XML::LibXML" : "0",
+            "XML::LibXML" : "2.0132",
+            "XML::LibXML::Simple" : "0.99",
             "namespace::clean" : "0",
             "perl" : "5.008005"
          }
       },
       "test" : {
          "requires" : {
-            "Test::More" : "0.96"
+            "Test::More" : "0"
          }
       }
    },
@@ -67,7 +68,7 @@
          "web" : "https://github.com/LibreCat/Catmandu-WoS"
       }
    },
-   "version" : "0.03",
+   "version" : "0.0301",
    "x_serialization_backend" : "Cpanel::JSON::XS version 3.0239"
 }
 

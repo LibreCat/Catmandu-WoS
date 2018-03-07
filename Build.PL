@@ -18,26 +18,27 @@ my %module_build_args = (
     "Nicolas Steenlant <nicolas.steenlant\@ugent.be>"
   ],
   "dist_name" => "Catmandu-WoS",
-  "dist_version" => "0.03",
+  "dist_version" => "0.0301",
   "license" => "perl",
   "module_name" => "Catmandu::WoS",
   "recursive_test_files" => 1,
   "requires" => {
     "Catmandu" => "1.09",
     "URI::Escape" => 0,
-    "XML::LibXML" => 0,
+    "XML::LibXML" => "2.0132",
+    "XML::LibXML::Simple" => "0.99",
     "namespace::clean" => 0,
     "perl" => "5.008005"
   },
   "test_requires" => {
-    "Test::More" => "0.96"
+    "Test::More" => 0
   }
 );
 
 
 my %fallback_build_requires = (
   "Module::Build" => "0.28",
-  "Test::More" => "0.96"
+  "Test::More" => 0
 );
 
 
