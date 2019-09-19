@@ -1,5 +1,7 @@
 requires 'perl', '5.008005';
 
+requires 'Moo', '0';
+requires 'Moo::Role', '0';
 requires 'Catmandu', '1.09';
 requires 'namespace::clean', '0';
 requires 'URI::Escape', '0';
