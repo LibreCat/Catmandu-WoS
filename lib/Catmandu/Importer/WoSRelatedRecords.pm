@@ -10,7 +10,7 @@ use namespace::clean;
 
 with 'Catmandu::WoS::SearchRecords';
 
-has uid => (is => 'ro', required => 1);
+has uid            => (is => 'ro', required => 1);
 has timespan_begin => (is => 'ro');
 has timespan_end   => (is => 'ro');
 

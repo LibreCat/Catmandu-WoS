@@ -102,7 +102,7 @@ sub _search {
         $self->_search_content($start, $limit),
         $self->session_id);
 
-    my $recs = $self->_find_records($xpc, $response_type);
+    my $recs  = $self->_find_records($xpc, $response_type);
     my $total = $xpc->findvalue(
         "/soap:Envelope/soap:Body/ns2:$response_type/return/recordsFound");
     my $query_id = $xpc->findvalue(
