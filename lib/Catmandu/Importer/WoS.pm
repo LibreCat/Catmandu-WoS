@@ -26,7 +26,8 @@ sub _search_content {
     my $timespan_xml          = '';
 
     if (my $edition = $self->edition) {
-        $edition_xml = "<editions><collection>WOS</collection><edition>$edition</edition></editions>";
+        $edition_xml
+            = "<editions><collection>WOS</collection><edition>$edition</edition></editions>";
     }
 
     if (my $ts = $self->symbolic_timespan) {
