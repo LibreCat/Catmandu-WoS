@@ -2,7 +2,7 @@ package Catmandu::WoS;
 
 use Catmandu::Sane;
 
-our $VERSION = '0.0302';
+our $VERSION = '0.0303';
 
 1;
 
