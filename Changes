@@ -1,6 +1,7 @@
 Revision history for Catmandu-WoS
 
 {{$NEXT}}
+        - support filtering on edition
 
 0.0302  2019-09-19 17:36:30 CEST
         - add missing dependencies

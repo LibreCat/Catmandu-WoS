@@ -90,6 +90,7 @@ Catmandu::Importer::WoS - Import Web of Science records
     # On the command line
 
     $ catmandu convert WoS --username XXX --password XXX --query 'TS=(lead OR cadmium)' to YAML
+    $ catmandu convert WoS --username XXX --password XXX --query 'TS=(lead OR cadmium)' --edition SCI to YAML
 
     # In perl
 
