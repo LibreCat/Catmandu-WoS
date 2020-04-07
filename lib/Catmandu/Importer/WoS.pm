@@ -11,6 +11,7 @@ use namespace::clean;
 with 'Catmandu::WoS::SearchRecords';
 
 has query             => (is => 'ro', required => 1);
+has edition           => (is => 'ro');
 has symbolic_timespan => (is => 'ro');
 has timespan_begin    => (is => 'ro');
 has timespan_end      => (is => 'ro');
@@ -20,8 +21,13 @@ sub _search_content {
 
     my $query = xml_escape($self->query);
 
+    my $edition_xml           = '';
     my $symbolic_timespan_xml = '';
     my $timespan_xml          = '';
+
+    if (my $edition = $self->edition) {
+        $edition_xml = "<editions><collection>WOS</collection><edition>$edition</edition></editions>";
+    }
 
     if (my $ts = $self->symbolic_timespan) {
         $symbolic_timespan_xml = "<symbolicTimeSpan>$ts</symbolicTimeSpan>";
@@ -42,6 +48,7 @@ sub _search_content {
          <queryParameters>
             <databaseId>WOS</databaseId>
             <userQuery>$query</userQuery>
+            $edition_xml
             $symbolic_timespan_xml
             $timespan_xml
             <queryLanguage>en</queryLanguage>
